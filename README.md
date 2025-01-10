@@ -4,6 +4,7 @@ Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/66
 
 ## Found by 
 0xbranded
+
 ## Summary
 Borrowing and funding fees of both longs/shorts suffer from two distinct sources of precision loss. The level of precision loss is large enough to consistently occur at a significant level, and can even result in total omission of fee payment for periods of time. This error is especially disruptive given the sensitive nature of funding fee calculations both in determining liquidations (a core functionality), as well as payments received by LPs and funding recipients (representing a significant loss). 
 
@@ -976,8 +977,6 @@ Each added digit of precision decreases the precision loss by an order of magnit
 
 Consult `Denom.vy` for further guidance on necessary adjustments to make to the various functions to account for these updated values.
 
-
-
 ## Discussion
 
 **KupiaSecAdmin**
@@ -1000,7 +999,7 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 **msheikhattari**
 
-It's not a design choice, this is clearly a precision loss issue. There are real loss of funds and delayed liquidation that consistently occur given the real world parameters such as blocktime. these are clearly documented in the PoC with specific errors exceeding 10% consistently, and sometimes even total loss of fee payment.
+It's not a design choice, this is clearly a precision loss issue. There are real loss of funds and delayed liquidation that consistently occur given the real world parameters such as blocktime. these are clearly documented in the PoC with specific errors exceeding 10\% consistently, and sometimes even total loss of fee payment.
 
 DENOM is a constant that cannot be updated. It must be corrected by increasing the decimals of precision.
 
@@ -1014,21 +1013,21 @@ Still, this is low/info at most.
 
 **msheikhattari**
 
-No parameters can be updated to fix this issue - DENOM must directly be changed (which is a constant). It currently supports annual fees of about 1.5% increments which is way too much precision loss with errors consistently exceeding 10% in all fee calculations.
+No parameters can be updated to fix this issue - DENOM must directly be changed (which is a constant). It currently supports annual fees of about 1.5\% increments which is way too much precision loss with errors consistently exceeding 10\% in all fee calculations.
 
-The numerator is blocks * rate, the point is that the rate component cannot support fees with a precision below 1.5% because of the DENOM parameter that is too small.
+The numerator is blocks * rate, the point is that the rate component cannot support fees with a precision below 1.5\% because of the DENOM parameter that is too small.
 
 I included a PoC which clearly demonstrates this currently unavoidable precision loss.
 
 **rickkk137**
 
-> No parameters can be updated to fix this issue - DENOM must directly be changed (which is a constant). It currently supports annual fees of about 1.5% increments which is way too much precision loss with errors consistently exceeding 10% in all fee calculations.
+> No parameters can be updated to fix this issue - DENOM must directly be changed (which is a constant). It currently supports annual fees of about 1.5\% increments which is way too much precision loss with errors consistently exceeding 10\% in all fee calculations.
 > 
-> The numerator is blocks * rate, the point is that the rate component cannot support fees with a precision below 1.5% because of the DENOM parameter that is too small.
+> The numerator is blocks * rate, the point is that the rate component cannot support fees with a precision below 1.5\% because of the DENOM parameter that is too small.
 > 
 > I included a PoC which clearly demonstrates this currently unavoidable precision loss.
 
-I read your PoC,root cause in this report is here which mentioned in this report and borrowing_paid calculation doesn't have effect
+I read your PoC,root cause in this report is here which mentioned in this report and borrowing\_paid calculation doesn't have effect
 ```vyper
 def utilization(reserves: uint256, interest: uint256) -> uint256:
     return 0 if (reserves == 0 or interest == 0) else (interest / (reserves / 100))
@@ -1053,7 +1052,7 @@ Agree with the above, as I understand, there are no extensive limitations, and t
 
 **rickkk137**
 
-root cause in this issue and #72 is same
+root cause in this issue and \#72 is same
 
 **KupiaSecAdmin**
 
@@ -1072,7 +1071,7 @@ second one:
 def apply(x: uint256, numerator: uint256) -> Fee:
   fee      : uint256 = (x * numerator) / DENOM
  ```
- first one has precision loss but [second one doesn't have](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/126#issuecomment-2365007747)
+ first one has precision loss but [second one doesn't have](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/126\#issuecomment-2365007747)
 
 **KupiaSecAdmin**
 
@@ -1080,7 +1079,7 @@ def apply(x: uint256, numerator: uint256) -> Fee:
 
 **rickkk137**
 
-@KupiaSecAdmin no,I don't think so, imo #87 is not possible i wrote my comment there
+@KupiaSecAdmin no,I don't think so, imo \#87 is not possible i wrote my comment there
 
 
 **msheikhattari**
@@ -1089,18 +1088,18 @@ Please refer to the PoC, the issue is currently unmitigatable due to the precisi
 
 **WangSecurity**
 
-I believe @rickkk137 is correct that this and #72 have the same root cause and explain the same problem. The escalation will still be rejected, and #72 + #60 (duplicate) will be duplicated with this report because it goes more in-depth in explaining the issue and shows a higher severity. 
+I believe @rickkk137 is correct that this and \#72 have the same root cause and explain the same problem. The escalation will still be rejected, and \#72 + \#60 (duplicate) will be duplicated with this report because it goes more in-depth in explaining the issue and shows a higher severity. 
 
 **msheikhattari**
 
-#72 is describing a different issue. It doesn't mention the DENOM parameter at all and should not be duped with this one. 
+\#72 is describing a different issue. It doesn't mention the DENOM parameter at all and should not be duped with this one. 
 
-That issue is talking about setting min values for `long_utilization` and `short_utilization`, the only similarity is that they are both sources of precision loss. Otherwise the underlying issue is different.
+That issue is talking about setting min values for `long\_utilization` and `short\_utilization`, the only similarity is that they are both sources of precision loss. Otherwise the underlying issue is different.
 
 **WangSecurity**
 
 Yes, excuse me, focused too much on the utilisation part.
-The precision loss from Denom is relatively low based on the discussion under #126. But here the report combines 2 precision loss factors resulting in a major precision loss. Hence, I'm returning to my previous decision to reject the escalation, increase severity to high and leave it solo, because it combines 2 precision loss factors resulting in a more major issue than #72 which talks only about utilisation. Planning to apply this decision in a couple of hours.
+The precision loss from Denom is relatively low based on the discussion under \#126. But here the report combines 2 precision loss factors resulting in a major precision loss. Hence, I'm returning to my previous decision to reject the escalation, increase severity to high and leave it solo, because it combines 2 precision loss factors resulting in a more major issue than \#72 which talks only about utilisation. Planning to apply this decision in a couple of hours.
 
 **aslanbekaibimov**
 
@@ -1113,11 +1112,11 @@ The precision loss from Denom is relatively low based on the discussion under #1
     Identify a valid attack path or vulnerability path
     Fulfills other submission quality requirements (e.g. provides a PoC for categories that require one)
 
-Don't #72 and #60 satisfy all 4 requirements?
+Don't \#72 and \#60 satisfy all 4 requirements?
 
 **WangSecurity**
 
-Good question, but #72 and #60 identified only one source of precision loss, so the following should apply:
+Good question, but \#72 and \#60 identified only one source of precision loss, so the following should apply:
 
 > The exception to this would be if underlying code implementations OR impact OR the fixes are different, then they may be treated separately.
 
@@ -1139,26 +1138,26 @@ def utilization2(reserves: uint256, interest: uint256) -> uint256:
     """
     Reserve utilization in percent (rounded down). @audit this is actually rounded up...
     """
-   @>>> return 0 if (reserves == 0 or interest == 0) else (interest / (reserves / 100_000))
+   @>>> return 0 if (reserves == 0 or interest == 0) else (interest / (reserves / 100\_000))
 
 
 
 function testCombined() public {
         // now let's see what would happen if we raised the precision of both fees and percents
-        uint max_fee = 65;
-        uint max_fee2 = 65_000; // 3 extra digits of precision lowers error by 3 orders of magnitude
+        uint max\_fee = 65;
+        uint max\_fee2 = 65\_000; // 3 extra digits of precision lowers error by 3 orders of magnitude
 
-        uint256 reserves = 10_000_000 ether;
-        uint256 interest = 199_999 ether; // interest & reserves same in both, only differ in precision.
+        uint256 reserves = 10\_000\_000 ether;
+        uint256 interest = 199\_999 ether; // interest & reserves same in both, only differ in precision.
 
         uint256 util1 = denom.utilization(reserves, interest); 
     @>>>    uint256 util2 = denom.utilization2(reserves, interest); // 3 extra digits of precision here also
         
         // borrow rate
-        uint fee1 = denom.scale(max_fee, util1); 
-     @>>>  uint fee2 = denom.scale2(max_fee2, util2);
+        uint fee1 = denom.scale(max\_fee, util1); 
+     @>>>  uint fee2 = denom.scale2(max\_fee2, util2);
 
-        assertEq(fee1 * 1_000, fee2 - 999); // fee 1 is 1.000, fee 2 is 1.999 (~50% error)
+        assertEq(fee1 * 1\_000, fee2 - 999); // fee 1 is 1.000, fee 2 is 1.999 (~50\% error)
     }
 ```
 the watson passed util2 to denom.scale2 function in his PoC and that made huge difference and utilization2 function is custom function has written by watson
@@ -1189,22 +1188,22 @@ When combined, not only is the precision loss more severe but also more likely t
 
 **WangSecurity**
 
-But as I see in #126, the precision loss from Denom is not that severe, is it wrong?
+But as I see in \#126, the precision loss from Denom is not that severe, is it wrong?
 
 **msheikhattari**
 
-That issue is slightly different, but what was pointed out here is that the most granular annual fee representable is about 1.6% - these are the intervals for fee rates as well (ex. 2x 1.6, 3x 1.6...)
+That issue is slightly different, but what was pointed out here is that the most granular annual fee representable is about 1.6\% - these are the intervals for fee rates as well (ex. 2x 1.6, 3x 1.6...)
 
-Utilization on the other hand experiences precision loss of 1% in the extreme case (ex 14.9% -> 14%)
+Utilization on the other hand experiences precision loss of 1\% in the extreme case (ex 14.9\% -> 14\%)
 
 So in absolute terms the issue arising from DENOM is more significant, when combined these issues become far more significant than implied by their nominal values, not only due to multiplied loss of precision but increased likelihood of loss (if precision loss from one source bumps it just over the boundary of another, as outlined in the PoC)
 
 **WangSecurity**
 
-Yeah, I see. #126 tries to show a scenario where DENOM precision loss would round down the fees to 0, and for that to happen, the fees or collateral have to be very small, which results in a very small loss. But this issue just shows the precision loss from DENOM and doesn't try to show rounding down to 0. That's the key difference between the two reports.
+Yeah, I see. \#126 tries to show a scenario where DENOM precision loss would round down the fees to 0, and for that to happen, the fees or collateral have to be very small, which results in a very small loss. But this issue just shows the precision loss from DENOM and doesn't try to show rounding down to 0. That's the key difference between the two reports.
 
 Hence, my decision remains that this will remain solo with high severity as expressed above. Planning to reject the escalation. The decision will be applied tomorrow at 10 am UTC:
-> *Note: #126 won't be duplicated with this report as it doesn't show Medium impact*
+> *Note: \#126 won't be duplicated with this report as it doesn't show Medium impact*
 
 **WangSecurity**
 
@@ -1217,7 +1216,15 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/66/#issuecomment-2345173630): rejected
+- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/66/\#issuecomment-2345173630): rejected
+
+**sherlock-admin2**
+
+The protocol team fixed this issue in the following PRs/commits:
+https://github.com/Velar-co/gl-sherlock/pull/3
+
+
+
 
 # Issue H-2: User can sandwich their own position close to get back all of their position fees 
 
@@ -1225,6 +1232,7 @@ Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/94
 
 ## Found by 
 0x37, KupiaSec, bughuntoor
+
 ## Summary
 User can sandwich their own position close to get back all of their position fees
 
@@ -1250,8 +1258,6 @@ Manual Review
 
 ## Recommendation
 Implement a system where fees are gradually distributed to LP providers.
-
-
 
 ## Discussion
 
@@ -1296,18 +1302,18 @@ Pool contract uses above formola to compute amount of LP token to mint and also 
 pool VEL-STX:
 VEL reserve = 1000
 STX reserve = 1000
-VEL/STX price = $1
-LP total_supply = 1000
-**pv stand for pool value and ts stand for total_supply and mv stand for mint value**
-LP_price = ts / pv = 1000 / 1000 = $1
-its mean if user deposit $1000 into pool in result get 1000 LP token
+VEL/STX price = \$1
+LP total\_supply = 1000
+**pv stand for pool value and ts stand for total\_supply and mv stand for mint value**
+LP\_price = ts / pv = 1000 / 1000 = \$1
+its mean if user deposit \$1000 into pool in result get 1000 LP token
 and for burn
-burn_value = lp_amount * pool_value / total_supply and based on above example
-total_supply=2000
-pool_value=2000
-because user deposit $1000 into pool and mint 1000lp token
+burn\_value = lp\_amount * pool\_value / total\_supply and based on above example
+total\_supply=2000
+pool\_value=2000
+because user deposit \$1000 into pool and mint 1000lp token
 
-the issue want to say mailicious user with increase lp price can retrieve borrowing_fee ,but when mailicious users and other users closes their profitable positions pool_value will be decreased[the protocol pay users' profit from pool reserve],hence burn_value become less than usual state
+the issue want to say mailicious user with increase lp price can retrieve borrowing\_fee ,but when mailicious users and other users closes their profitable positions pool\_value will be decreased[the protocol pay users' profit from pool reserve],hence burn\_value become less than usual state
 
 requirment internal state for attack path:
 
@@ -1361,14 +1367,25 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/94/#issuecomment-2344292890): rejected
+- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/94/\#issuecomment-2344292890): rejected
+
+**sherlock-admin2**
+
+The protocol team fixed this issue in the following PRs/commits:
+https://github.com/Velar-co/gl-sherlock/pull/1
+
+
+
 
 # Issue M-1: LPs will withdraw more value than deposited during pegged token de-peg events 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/52 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 4gontuk, KupiaSec
+
 ### Summary
 The [`CONTEXT` function in `gl-sherlock/contracts/api.vy`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/main/gl-sherlock/contracts/api.vy#L52-L71) uses the `<quote-token>/USD` price for valuation, assuming a 1:1 peg between the quote token and USD. This assumption can fail during de-peg events, leading to incorrect valuations and potential exploitation.
 
@@ -1596,8 +1613,6 @@ def CONTEXT(
 ### Mitigation
 To mitigate this issue, the protocol should use the `<base-token>/<quote-token>` price directly if available, or derive it from the `<base-token>/USD` and `<quote-token>/USD` prices. This ensures accurate valuations even if the quote token de-pegs from USD.
 
-
-
 ## Discussion
 
 **mePopye**
@@ -1620,7 +1635,7 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 **WangSecurity**
 
-After additionally considering this issue, here's my understanding. Let's assume a scenario of 30% depeg and USDT = 0.7 USD.
+After additionally considering this issue, here's my understanding. Let's assume a scenario of 30\% depeg and USDT = 0.7 USD.
 1. The pool has 10 BTC and 500k USDT.
 2. User deposits 1 BTC and 50k USDT, assuming 1 BTC = 50k USDT = 50k USD.
 3. USDT depegs to 0.7 USD, i.e. 1 USDT = 0.7 USD. Then BTC = 50k USD = ~71.5k USDT.
@@ -1629,7 +1644,7 @@ After additionally considering this issue, here's my understanding. Let's assume
 6. But, in reality, the user has withdrawn 50k worth of BTC and 35k worth of USDT since 1 USDT = 0.7 USD.
 7. Hence, if the protocol accounted for the depeg, there had to be 10 BTC and 515k USDT left in the contract after the user had withdrawn during the depeg.
 
-Hence, even though it's not a direct loss of funds but a loss in value, this should be a valid medium (considering depeg as an extensive limitation). Thus, planning to accept the escalation and validate with medium severity. The duplicate is #113, are there any additional duplicates?
+Hence, even though it's not a direct loss of funds but a loss in value, this should be a valid medium (considering depeg as an extensive limitation). Thus, planning to accept the escalation and validate with medium severity. The duplicate is \#113, are there any additional duplicates?
 
 **WangSecurity**
 
@@ -1642,14 +1657,19 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [mePopye](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/52/#issuecomment-2345299625): accepted
+- [mePopye](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/52/\#issuecomment-2345299625): accepted
+
+
 
 # Issue M-2: Funding fee will be zero because of precision loss 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/72 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 aslanbek, pashap9990
+
 ### Summary
 
 funding fee in some cases will be zero because of precision loss
@@ -1751,8 +1771,6 @@ def test_precision_loss(setup, open,VEL, STX, long, positions, pools):
 1-scale up long_utilzation and short_utilzation
 2-set min value for long_utilzation and short_utilzation
 
-
-
 ## Discussion
 
 **sherlock-admin3**
@@ -1760,33 +1778,33 @@ def test_precision_loss(setup, open,VEL, STX, long, positions, pools):
 > Escalate
 > 
 > Let’s assume 
-> interest = 1_099_999e18
-> reserve=10_000_000e18
-> max_fee = 100
-> long_utilization = interest / reserve / 100 = 1_099_999e18 / 10_000_000e18 / 100 = 10.99 ~ 10 //round down
-> borrowing_fee = max_fee * long_utillization / 100 = 100 * 10.99 / 100 = 10.99
+> interest = 1\_099\_999e18
+> reserve=10\_000\_000e18
+> max\_fee = 100
+> long\_utilization = interest / reserve / 100 = 1\_099\_999e18 / 10\_000\_000e18 / 100 = 10.99 ~ 10 //round down
+> borrowing\_fee = max\_fee * long\_utillization / 100 = 100 * 10.99 / 100 = 10.99
 > after one year
 > 
 > 
 > //result without precision loss
-> block_per_year = 15_778_800
-> funding_fee_sum = block_per_year * funding_fee = 15778800 * 10.99 = 173,409,012
-> borrowing_long_sum = block_per_year * borrowing_fee = 15778800 * 10.99 = 173,409,012
+> block\_per\_year = 15\_778\_800
+> funding\_fee\_sum = block\_per\_year * funding\_fee = 15778800 * 10.99 = 173,409,012
+> borrowing\_long\_sum = block\_per\_year * borrowing\_fee = 15778800 * 10.99 = 173,409,012
 > 
-> borrowing_paid = collateral * borrowing_long_sum / DENOM = 1_099_999e18 * 173,409,012 / 1e9 =  190,749e18
+> borrowing\_paid = collateral * borrowing\_long\_sum / DENOM = 1\_099\_999e18 * 173,409,012 / 1e9 =  190,749e18
 > 
-> funding_paid = collateral * funding_fee_sum / DENOM = 190,749e18
+> funding\_paid = collateral * funding\_fee\_sum / DENOM = 190,749e18
 > 
 > //result with precision loss
-> block_per_year = 15_778_800
-> funding_fee_sum = block_per_year * funding_fee = 15778800 * 10 = 157788000 
-> borrowing_long_sum = block_per_year * borrowing_fee = 15778800 * 10 = 157788000
+> block\_per\_year = 15\_778\_800
+> funding\_fee\_sum = block\_per\_year * funding\_fee = 15778800 * 10 = 157788000 
+> borrowing\_long\_sum = block\_per\_year * borrowing\_fee = 15778800 * 10 = 157788000
 > 
-> borrowing_paid = collateral * borrowing_long_sum / DENOM = 1_099_999e18 * 157788000 / 1e9 =  173,566e18
+> borrowing\_paid = collateral * borrowing\_long\_sum / DENOM = 1\_099\_999e18 * 157788000 / 1e9 =  173,566e18
 > 
-> funding_paid = collateral * funding_fee_sum / DENOM = 173,566e18
+> funding\_paid = collateral * funding\_fee\_sum / DENOM = 173,566e18
 > 
-> result:1% difference exists in result
+> result:1\% difference exists in result
 > 
 > 
 >        
@@ -1802,18 +1820,18 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 **WangSecurity**
 
-To clarify, due to this precision loss, there will be a 1% loss of the funding fee or am I missing something?
+To clarify, due to this precision loss, there will be a 1\% loss of the funding fee or am I missing something?
 
 **rickkk137**
 
 
 
-open_interest = 1,099,999e6
+open\_interest = 1,099,999e6
 reserve = 10,000,000e6
 
-long_util = open_interest / reserve / 100 = 10.99
-borrowing_fee = max_fee * long_util / 100 = 100 * 10.99 / 100 = 10.99
-funding_fee = borrowing_fee * long_util / 100 = 10.99 * 10.99 / 100 = 1.20
+long\_util = open\_interest / reserve / 100 = 10.99
+borrowing\_fee = max\_fee * long\_util / 100 = 100 * 10.99 / 100 = 10.99
+funding\_fee = borrowing\_fee * long\_util / 100 = 10.99 * 10.99 / 100 = 1.20
 
 
 lets assume there is a long position with 10000e6 colleral and user want to close his position after a year[15778800 blocks per year]
@@ -1821,20 +1839,20 @@ lets assume there is a long position with 10000e6 colleral and user want to clos
 **result without precision loss**
 
 
-borrowing_paid = collateral * borrowing_sum / DENOM
+borrowing\_paid = collateral * borrowing\_sum / DENOM
 
-borrowing_paid = 10,000e6 * 15778800 * 10.99 / 1e9 = 1,734,090,120[its mean user has to pay $1734 as borrowing fee]
-funding_paid = collateral * funding_sum / DENOM = 10,000e6 * 1.20 * 15778800 / 1e9 = 189,345,600[its mean user has to pay $189 as funding fee]
+borrowing\_paid = 10,000e6 * 15778800 * 10.99 / 1e9 = 1,734,090,120[its mean user has to pay \$1734 as borrowing fee]
+funding\_paid = collateral * funding\_sum / DENOM = 10,000e6 * 1.20 * 15778800 / 1e9 = 189,345,600[its mean user has to pay \$189 as funding fee]
 
 **result with precision loss**
 
-borrowing_paid = collateral * borrowing_sum / DENOM
-borrowing_paid = 10,000e6 * 15778800 * 10 / 1e9 = 1,577,880,000[its mean user has to pay $1,577 as borrowing fee]
-funding_paid = collateral * funding_sum / DENOM = 10,000e6 * 1 * 15778800 / 1e9 = 157,788,000[its mean user has to pay $157 as funding fee]
+borrowing\_paid = collateral * borrowing\_sum / DENOM
+borrowing\_paid = 10,000e6 * 15778800 * 10 / 1e9 = 1,577,880,000[its mean user has to pay \$1,577 as borrowing fee]
+funding\_paid = collateral * funding\_sum / DENOM = 10,000e6 * 1 * 15778800 / 1e9 = 157,788,000[its mean user has to pay \$157 as funding fee]
 
 
-LPs loss = $157[~1%]
-user pay $32 less than expected [32 * 100 / 189 ~ 16%]
+LPs loss = \$157[~1\%]
+user pay \$32 less than expected [32 * 100 / 189 ~ 16\%]
 
 
 
@@ -1846,12 +1864,12 @@ user pay $32 less than expected [32 * 100 / 189 ~ 16%]
 
 **rickkk137**
 
-#60 dup of this issue
+\#60 dup of this issue
 
 
 **WangSecurity**
 
-I agree that this issue is correct and indeed identifies the precision loss showcasing the 1% loss. Planning to accept the escalation and validate with medium severity.
+I agree that this issue is correct and indeed identifies the precision loss showcasing the 1\% loss. Planning to accept the escalation and validate with medium severity.
 
 **WangSecurity**
 
@@ -1864,14 +1882,19 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [rickkk137](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/72/#issuecomment-2348564086): accepted
+- [rickkk137](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/72/\#issuecomment-2348564086): accepted
+
+
 
 # Issue M-3: LPs cannot specify min amount received in burn function, causing loss of fund for them 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/74 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 PASCAL, pashap9990
+
 ### Summary
 LPs cannot set minimum base or quote amounts when burning LP tokens, leading to potential losses due to price fluctuations during transactions.
 
@@ -1952,17 +1975,15 @@ def test_lost_assets(setup, VEL, STX, lp_provider, LP, pools, math, open, long, 
 
 Consider adding min_base_amount and min_quote_amount to the burn function's params or adding min_assets_value for example when the price is $2 LPs set this param to $14800, its mean received value worse has to be greater than $14800  
 
-
-
 ## Discussion
 
 **rickkk137**
 
 Escalate
-LP token price directly compute based pool reserve and total supply lp token and the issue clearly states received amount can be less than expected amount and in Coded PoC liquidity provider expected $15000 but in result get $12500
+LP token price directly compute based pool reserve and total supply lp token and the issue clearly states received amount can be less than expected amount and in Coded PoC liquidity provider expected \$15000 but in result get \$12500
 
-loss = $2500[1.6%] 
->Causes a loss of funds but requires certain external conditions or specific states, or a loss is highly constrained. The loss of the affected party must exceed 0.01% and 10 USD
+loss = \$2500[1.6\%] 
+>Causes a loss of funds but requires certain external conditions or specific states, or a loss is highly constrained. The loss of the affected party must exceed 0.01\% and 10 USD
 
 
 **sherlock-admin3**
@@ -1982,16 +2003,16 @@ However, the LPs can add input slippage parameters, i.e. `desired` and `slippage
 
 **rickkk137**
 
-@WangSecurity `desired` and `slippage` just has been used to [control price which fetch from oracle](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/oracle.vy#L122) and protocol uses of that for converting quote to base or base to quote to compute total pool's reserve in terms of quote token but there is 2 tips here
-- burn value = [lp_amt * pool_reserve / total_supply_lp](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/pools.vy#L215C28-L215C29)
-- [pool_reserve will be decreased when users closes their profitable positions](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L203)
+@WangSecurity `desired` and `slippage` just has been used to [control price which fetch from oracle](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/oracle.vy\#L122) and protocol uses of that for converting quote to base or base to quote to compute total pool's reserve in terms of quote token but there is 2 tips here
+- burn value = [lp\_amt * pool\_reserve / total\_supply\_lp](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/pools.vy\#L215C28-L215C29)
+- [pool\_reserve will be decreased when users closes their profitable positions](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L203)
 
 let's examine an example with together:
-u have 1000 lp token and u want convert them to usd and pool_reserve and total_supply_lp is 1000 in our example,
-burn_value = lp_amt * pool_reserve / total_supply = 1000 * 1000 / 1000 = 1000 usd
-based on above value u send your transaction to network but a close profitable transaction will be executed before your transaction and get $100 as payout,its mean pool reserve is 900 
-burn_value = lp_amt * pool_reserve / total_supply = 1000 * 900 / 1000 = 900 usd
-u get $900 instead of $1000 and u cannot control this situation as a user 
+u have 1000 lp token and u want convert them to usd and pool\_reserve and total\_supply\_lp is 1000 in our example,
+burn\_value = lp\_amt * pool\_reserve / total\_supply = 1000 * 1000 / 1000 = 1000 usd
+based on above value u send your transaction to network but a close profitable transaction will be executed before your transaction and get \$100 as payout,its mean pool reserve is 900 
+burn\_value = lp\_amt * pool\_reserve / total\_supply = 1000 * 900 / 1000 = 900 usd
+u get \$900 instead of \$1000 and u cannot control this situation as a user 
 
 **WangSecurity**
 
@@ -2008,14 +2029,19 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [rickkk137](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/74/#issuecomment-2348583408): accepted
+- [rickkk137](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/74/\#issuecomment-2348583408): accepted
+
+
 
 # Issue M-4: Invalid Redstone oracle payload size prevents the protocol from working properly 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/75 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 KupiaSec
+
 ## Summary
 In api contract, it uses 224 bytes as maximum length for Redstone's oracle payload, but oracle price data and signatures of 3 signers exceeds 225 bytes thus reverting transactions.
 
@@ -2045,8 +2071,6 @@ Manual Review
 
 ## Recommendation
 The upperbound size of payload array should be increased to satisfy Redstone oracle payload size.
-
-
 
 ## Discussion
 
@@ -2091,11 +2115,11 @@ bytes memory redstonePayload0 = getRedstonePayload("BTC:120:8,ETH:69:8");
 425443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002cb41780001921f3ed1d400000020000001e3cabe40b42498dccea014557946f3bae4d29783c9dc7deb499c5a2d6d1901412cba9924d1c1fdfc429c07361ed9fab2789e191791a31ecdbbd77ab95a373f491c0001000000000002ed57011e0000
 
 def mint(
-  base_token  : address, #ERC20
-  quote_token : address, #ERC20
-  lp_token    : address, #ERC20Plus
-  base_amt    : uint256,
-  quote_amt   : uint256,
+  base\_token  : address, \#ERC20
+  quote\_token : address, \#ERC20
+  lp\_token    : address, \#ERC20Plus
+  base\_amt    : uint256,
+  quote\_amt   : uint256,
   desired     : uint256,
   slippage    : uint256,
  @>>> payload     : Bytes[224]
@@ -2105,11 +2129,11 @@ payload parameter's length is 224 its mean we can pass a string with max length 
 
 **KupiaSecAdmin**
 
-@rickkk137 - Bytes type is different from strings as documented [here](https://docs.vyperlang.org/en/stable/types.html#byte-arrays), Bytes[224] means 224 bytes.
+@rickkk137 - Bytes type is different from strings as documented [here](https://docs.vyperlang.org/en/stable/types.html\#byte-arrays), Bytes[224] means 224 bytes.
 
 **rickkk137**
 
-Each pair of hexadecimal digits represents one byte and in above examples first example's length is [440 / 2] 220 bytes and second one's length is [312/2] 156 bytes, further more in [redstoneExtractor contract](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol#L10) developer just uses index 0 which its mean requestRedstonePayload function  just get one symbol as a parameter in Velar 
+Each pair of hexadecimal digits represents one byte and in above examples first example's length is [440 / 2] 220 bytes and second one's length is [312/2] 156 bytes, further more in [redstoneExtractor contract](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol\#L10) developer just uses index 0 which its mean requestRedstonePayload function  just get one symbol as a parameter in Velar 
 
 **KupiaSecAdmin**
 
@@ -2163,7 +2187,7 @@ function getAuthorisedSignerIndex(
 
 **KupiaSecAdmin**
 
-@WangSecurity - It comes from the RedStone implementation that Verla uses: https://github.com/redstone-finance/redstone-oracles-monorepo/blob/2bbf16cbbaa36f7046034dbbd968f3673a0657e8/packages/evm-connector/contracts/data-services/PrimaryProdDataServiceConsumerBase.sol#L12-L14
+@WangSecurity - It comes from the RedStone implementation that Verla uses: https://github.com/redstone-finance/redstone-oracles-monorepo/blob/2bbf16cbbaa36f7046034dbbd968f3673a0657e8/packages/evm-connector/contracts/data-services/PrimaryProdDataServiceConsumerBase.sol\#L12-L14
 
 And you know, usually, using one signer data as oracle causes issue because its data can be malicious, that's how the protocol takes 3 signers and take median price among them.
 
@@ -2174,16 +2198,16 @@ Unfortunately, I'm still not convinced enough this is actually a valid finding. 
 Secondly, this transaction is on Avalanche, while Velar will be deployed on Bob.
 
 Hence, this is not a sufficient argument that 224 Bytes won't be enough. 
-Thirdly, `payload` is used when calling the [`extract_price`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol#L6) function which doesn't even use that payload. Hence, I don't see a sufficient argument for this being a medium, but before making the decision, I'm giving some time to correct my points.
+Thirdly, `payload` is used when calling the [`extract\_price`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol\#L6) function which doesn't even use that payload. Hence, I don't see a sufficient argument for this being a medium, but before making the decision, I'm giving some time to correct my points.
 
 **rickkk137**
 
-@WangSecurity u can pass n asset to fetchPayload function and that isn't const its mean payload length is flexible which depend on protocol and when we look at [extract_price](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol#L10) which just uses index 0 its mean they are suppose to pass just one symbol to redstone function to get payload and base on [redstone document](https://github.com/redstone-finance/redstone-evm-connector) payload's length just for one symbol is 172 bytes which is less than 224 bytes
+@WangSecurity u can pass n asset to fetchPayload function and that isn't const its mean payload length is flexible which depend on protocol and when we look at [extract\_price](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/RedstoneExtractor.sol\#L10) which just uses index 0 its mean they are suppose to pass just one symbol to redstone function to get payload and base on [redstone document](https://github.com/redstone-finance/redstone-evm-connector) payload's length just for one symbol is 172 bytes which is less than 224 bytes
 
-payload_size = n*(32 + 32) + 32 + 1 + 65
-payload_size_for_one_asset = 1 * (32 + 32) + 32 + 1 + 65 = 172 bytes
-payload_size_for_two_asset = 2 * (32 + 32) + 32 + 1 + 65 = 226 bytes
-payload_size_for_three_asset = 3 * (32 + 32) + 32 + 1 + 65 = 290 bytes
+payload\_size = n*(32 + 32) + 32 + 1 + 65
+payload\_size\_for\_one\_asset = 1 * (32 + 32) + 32 + 1 + 65 = 172 bytes
+payload\_size\_for\_two\_asset = 2 * (32 + 32) + 32 + 1 + 65 = 226 bytes
+payload\_size\_for\_three\_asset = 3 * (32 + 32) + 32 + 1 + 65 = 290 bytes
 ...
 
 
@@ -2196,7 +2220,7 @@ The point is that it's obvious the price data can't fit in 224 bytes. As @rickkk
 
 **rickkk137**
 
-Velar protocol uses version [0.6.1 redstone-evm-connector](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/package.json#L3) and in this version `RedstoneConsumerBase::getUniqueSignersThreshold` returns 1 in this path `/
+Velar protocol uses version [0.6.1 redstone-evm-connector](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/package.json\#L3) and in this version `RedstoneConsumerBase::getUniqueSignersThreshold` returns 1 in this path `/
 @redstone-finance/evm-connector
 /
 contracts
@@ -2205,7 +2229,7 @@ core
 /
 RedstoneConsumerBase.sol`,hence just one signer is required
 https://www.npmjs.com/package/@redstone-finance/evm-connector/v/0.6.1?activeTab=code
-also when we look at [make file](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/GNUmakefile#L28C22-L28C42) we realized Velar's developers directly copy RedstoneConsumerBase contract without any changes,furthermore usingDataService function get unique signer as a parameter and when they restricted payload to 224 bytes its mean they want to pass 1 as a uniqueSignersCount
+also when we look at [make file](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/GNUmakefile\#L28C22-L28C42) we realized Velar's developers directly copy RedstoneConsumerBase contract without any changes,furthermore usingDataService function get unique signer as a parameter and when they restricted payload to 224 bytes its mean they want to pass 1 as a uniqueSignersCount
 ```typescript
 
  const wrappedContract = WrapperBuilder.wrap(contract).usingDataService({
@@ -2214,7 +2238,7 @@ also when we look at [make file](https://github.com/sherlock-audit/2024-08-velar
     dataFeeds: ["BTC", "ETH", "BNB", "AR", "AVAX", "CELO"],
   });
 ```
-https://github.com/redstone-finance/redstone-showroom/blob/0db580be39bdccb9632ee4d8d8c80e4182d8e266/example/getTokensPrices.ts#L22
+https://github.com/redstone-finance/redstone-showroom/blob/0db580be39bdccb9632ee4d8d8c80e4182d8e266/example/getTokensPrices.ts\#L22
 
 **KupiaSecAdmin**
 
@@ -2245,14 +2269,19 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/75/#issuecomment-2344252146): accepted
+- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/75/\#issuecomment-2344252146): accepted
+
+
 
 # Issue M-5: Not decreasing oracle timestamp validation leads to DoS for protocol users 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/79 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 KupiaSec
+
 ## Summary
 The protocol only allows equal or increased timestamp of oracle prices whenever an action happens in the protocol.
 This validation is wrong since it will lead to DoS for users.
@@ -2296,8 +2325,6 @@ Manual Review
 ## Recommendation
 It's recommended to remove that non-decreasing timestamp validation.
 If the protocol wants more strict oracle price validation than the RedStone does, it can just use the difference between oracle timestamp and current timestamp.
-
-
 
 ## Discussion
 
@@ -2360,7 +2387,7 @@ But there isn't loss of funds ,users can repeat their TXs
 
 **rickkk137**
 
-I agree with u and this can be problematic and Here's an [example](https://github.com/euler-xyz/euler-price-oracle/blob/eeb1847df7d9d58029de37225dabf963bf1a65e6/src/adapter/redstone/RedstoneCoreOracle.sol#L71C9-L72C75) of this approach but the issue's final result depend on sherlock rules
+I agree with u and this can be problematic and Here's an [example](https://github.com/euler-xyz/euler-price-oracle/blob/eeb1847df7d9d58029de37225dabf963bf1a65e6/src/adapter/redstone/RedstoneCoreOracle.sol\#L71C9-L72C75) of this approach but the issue's final result depend on sherlock rules
 
 **WangSecurity**
 
@@ -2396,14 +2423,19 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/79/#issuecomment-2344257659): accepted
+- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/79/\#issuecomment-2344257659): accepted
+
+
 
 # Issue M-6: Usage of `tx.origin` to determine the user is prone to attacks 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/82 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 Bauer, Greed, Japy69, KupiaSec, Waydou, bughuntoor, ctf\_sec, y4y
+
 ## Summary
 Usage of `tx.origin` to determine the user is prone to attacks
 
@@ -2432,8 +2464,6 @@ Manual Review
 
 ## Recommendation
 Instead of using `tx.origin` in `core.vy`, simply pass `msg.sender` as a parameter from `api.vy`
-
-
 
 ## Discussion
 
@@ -2474,14 +2504,19 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [T1MOH593](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/82/#issuecomment-2347091773): rejected
+- [T1MOH593](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/82/\#issuecomment-2347091773): rejected
+
+
 
 # Issue M-7: Funding Paid != Funding Received 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/83 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 0x37, 0xbranded, bughuntoor
+
 ## Summary
 Due to special requirements around receiving funding fees for a position, the funding fees received can be less than that paid. These funding fee payments are still payed, but a portion of them will not be withdrawn, and become stuck funds. This also violates the contract specification that `sum(funding_received) = sum(funding_paid)`.
 
@@ -2547,8 +2582,6 @@ Consider an alternative method of accounting for funding fees, as there are many
 
 For example, include a new state variable that explicitly tracks unpaid funding fee payments and perform some pro rata or market adjustment to future funding fee recipients, specifically for *that token*.
 
-
-
 ## Discussion
 
 **spacegliderrrr**
@@ -2575,20 +2608,20 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 The included code comment was an explicit invariant outlined by the team:
 ```
-#  - the protocol handles the accounting needed to maintain the sytem invariants:
-#    * funding payments match
-#        sum(funding_received) = sum(funding_paid)
+\#  - the protocol handles the accounting needed to maintain the sytem invariants:
+\#    * funding payments match
+\#        sum(funding\_received) = sum(funding\_paid)
 ```
 
-The problematic code was actually intended to enforce this invariant, however it does so incorrectly. In the case of a negative position due to fee underpayment, `sum(funding_received) > sum(funding_paid)`. To correct for this, or serve as a deterrent, these positions will not receive their funding payment. However the token in which they underpaid is not the same token that they will not receive funding payment for. As a result the imbalance between funding paid and received is not corrected - it is actually worsened.
+The problematic code was actually intended to enforce this invariant, however it does so incorrectly. In the case of a negative position due to fee underpayment, `sum(funding\_received) > sum(funding\_paid)`. To correct for this, or serve as a deterrent, these positions will not receive their funding payment. However the token in which they underpaid is not the same token that they will not receive funding payment for. As a result the imbalance between funding paid and received is not corrected - it is actually worsened.
 
-Not only that, but users may have paid their full funding payment and the `sum(funding_received) = sum(funding_paid)` invariant holds. But if the remaining balance was then not enough to cover their borrow fee, they will not receive their funding payment which would actually cause this invariant to break.
+Not only that, but users may have paid their full funding payment and the `sum(funding\_received) = sum(funding\_paid)` invariant holds. But if the remaining balance was then not enough to cover their borrow fee, they will not receive their funding payment which would actually cause this invariant to break.
 
 This specification is the source of truth, and the code clearly does not abide by it. The issue proposes alternative methods for accounting funding fee payments to ensure this invariant consistently holds.
 
 **msheikhattari**
 
-Also I do think this issue is similar to #18 and #93 
+Also I do think this issue is similar to \#18 and \#93 
 
 Will leave it to HoJ if they are combined since the source of the error is the same, but different impacts are described.
 
@@ -2611,13 +2644,13 @@ In the case where funding fees are overpaid (for more than the total position co
 
 > In the case where funding fees are overpaid (for more than the total position collateral), the other side receives these fees in a FIFO order, which is also clearly stated in the comments.
 
-To elaborate on this point, the vulnerability describes the case that `funding_received` from the other side is greater than the `funding_paid`. While it is indeed acknowledged fees are received in FIFO order, this is a problematic mitigation for this issue. This current approach is a questionable means of correcting the imbalance of funding payments to receipts. There are many cases where it not only doesn't correct for the funding payment imbalance, but actually worsens it, as explained above.
+To elaborate on this point, the vulnerability describes the case that `funding\_received` from the other side is greater than the `funding\_paid`. While it is indeed acknowledged fees are received in FIFO order, this is a problematic mitigation for this issue. This current approach is a questionable means of correcting the imbalance of funding payments to receipts. There are many cases where it not only doesn't correct for the funding payment imbalance, but actually worsens it, as explained above.
 
 Regardless, this seems to be a clearly defined invariant. Not only from this comment but further implied by the logic of this fee handling, which penalizes negative positions to build up some "insurance" tokens to hedge against the case that funding fees are underpaid. It also intuitively makes sense for this invariant to generally hold as otherwise malfunctions can occur such as failure to close positions; several linked issues reported various related problems stemming from this invariant breaking as well.
 
 **WangSecurity**
 
-Another question I've got after re-reading the report. The impact section says there will be stuck tokens in the contract which will never be paid. But, as I understand the problem is different. The issue is that these tokens are underpaid, e.g. if the funding fee is 10 tokens, but the remaining collateral is only 8, then there are 2 tokens underpaid. So, how the are stuck tokens in the contract, if the funding fee is not paid in full. Or it refers to the funding_received being larger than the funding_received actually?
+Another question I've got after re-reading the report. The impact section says there will be stuck tokens in the contract which will never be paid. But, as I understand the problem is different. The issue is that these tokens are underpaid, e.g. if the funding fee is 10 tokens, but the remaining collateral is only 8, then there are 2 tokens underpaid. So, how the are stuck tokens in the contract, if the funding fee is not paid in full. Or it refers to the funding\_received being larger than the funding\_received actually?
 
 **WangSecurity**
 
@@ -2628,9 +2661,9 @@ But, the issue here is not medium severity, because the position with collateral
 
 Apologies for the delayed response @WangSecurity 
 
-Yes, the original statement was as intended. That portion of the report was pointing out that there are two problematic impacts of the current approach that cause `sum(funding_paid) != sum(funding_received)`
-1. It's possible for `funding_received` by one side of the pool to exceed the `funding_paid` by the other side, in the case that a position went negative.
-2. It's possible for `funding_received` to be less than `funding_paid`, even for positions which did not go insolvent due to funding rates.
+Yes, the original statement was as intended. That portion of the report was pointing out that there are two problematic impacts of the current approach that cause `sum(funding\_paid) != sum(funding\_received)`
+1. It's possible for `funding\_received` by one side of the pool to exceed the `funding\_paid` by the other side, in the case that a position went negative.
+2. It's possible for `funding\_received` to be less than `funding\_paid`, even for positions which did not go insolvent due to funding rates.
 
 The outlined invariant is broken which results in loss of funds / broken functionality. It will prevent closing of some positions in the former case, and will result in some funds being stuck in the latter case. 
 
@@ -2638,11 +2671,11 @@ The current approach of penalizing negative positions is intended to 'build up a
 
 **WangSecurity**
 
-> It's possible for funding_received by one side of the pool to exceed the funding_paid by the other side, in the case that a position went negative.
+> It's possible for funding\_received by one side of the pool to exceed the funding\_paid by the other side, in the case that a position went negative.
 
-Could you elaborate on this? Similar to my analysis [here](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/86#issuecomment-2381323660), If the position is negative, but the collateral is not 0, the funding paid is larger than the position's collateral, the funding paid will be decreased to pos. collateral. The funding received will be 0 (if collateral is < funding paid, c1: remaining =0 and deducted =pos.collateral. Then c2: remaining =0 and deducted =0. funding received =0, because remaining =0. So, not sure how funding_received can be > funding paid and I need a more concrete example with numbers. 
+Could you elaborate on this? Similar to my analysis [here](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/86\#issuecomment-2381323660), If the position is negative, but the collateral is not 0, the funding paid is larger than the position's collateral, the funding paid will be decreased to pos. collateral. The funding received will be 0 (if collateral is < funding paid, c1: remaining =0 and deducted =pos.collateral. Then c2: remaining =0 and deducted =0. funding received =0, because remaining =0. So, not sure how funding\_received can be > funding paid and I need a more concrete example with numbers. 
 
-> It's possible for funding_received to be less than funding_paid, even for positions which did not go insolvent due to funding rates.
+> It's possible for funding\_received to be less than funding\_paid, even for positions which did not go insolvent due to funding rates.
 
 Agree that it's possible.
 
@@ -2670,24 +2703,24 @@ Hierarchy of truth: If the protocol team provides no specific information, the d
 If the protocol team provides specific information in the README or CODE COMMENTS, that information stands above all judging rules. In case of contradictions between the README and CODE COMMENTS, the README is the chosen source of truth.
 ```
 
-Nevertheless there are loss of funds from each case, let me first prove that `funding_received > funding_paid` is possible:
+Nevertheless there are loss of funds from each case, let me first prove that `funding\_received > funding\_paid` is possible:
 
 > Then c2: remaining =0 and deducted =0. funding received =0, because remaining =0.
 
-This is the crux of the issue I am reporting here. That's true in the case of a single position, the issue is that `funding_received` of that position being set to 0 does not mitigate the underpayment of funding which it made by going negative - they are opposite tokens in the pair.
+This is the crux of the issue I am reporting here. That's true in the case of a single position, the issue is that `funding\_received` of that position being set to 0 does not mitigate the underpayment of funding which it made by going negative - they are opposite tokens in the pair.
 
-While that positions `funding_payment` is capped at the collateral of the specific position, the other side of the pool will continue to accrue funding receipts from this portion of the collateral until it's liquidated:
+While that positions `funding\_payment` is capped at the collateral of the specific position, the other side of the pool will continue to accrue funding receipts from this portion of the collateral until it's liquidated:
 
 ```vyper
-  paid_long_term      : uint256 = self.apply(fs.long_collateral, fs.funding_long * new_terms)
-  received_short_term : uint256 = self.divide(paid_long_term,    fs.short_collateral)
+  paid\_long\_term      : uint256 = self.apply(fs.long\_collateral, fs.funding\_long * new\_terms)
+  received\_short\_term : uint256 = self.divide(paid\_long\_term,    fs.short\_collateral)
 ```
 
-This is because this collateral is not excluded from `fs.long_collateral`, it must be explicitly subtracted upon liquidation.
+This is because this collateral is not excluded from `fs.long\_collateral`, it must be explicitly subtracted upon liquidation.
 
-Now the issue causing loss of funds on this side is that positions will fail to close. On the other side, where `funding_received < funding_paid`, this is especially problematic in cases where the full funding payment was made, but the collateral fell short of the borrow fee.
+Now the issue causing loss of funds on this side is that positions will fail to close. On the other side, where `funding\_received < funding\_paid`, this is especially problematic in cases where the full funding payment was made, but the collateral fell short of the borrow fee.
 
-In this case, the balance `sum(funding_received) = sum(funding_paid)` was not broken by this position, as it made its full funding payment, but it will be excluded from receiving its portion of funding receipts. These tokens will not be directly claimable by any positions in the pool, causing loss of funds in that sense.
+In this case, the balance `sum(funding\_received) = sum(funding\_paid)` was not broken by this position, as it made its full funding payment, but it will be excluded from receiving its portion of funding receipts. These tokens will not be directly claimable by any positions in the pool, causing loss of funds in that sense.
 
 Upholding this balance of funding payments to receipts is an important invariant which causes loss of funds and protocol disruptions as outlined above. This is even acknowledged by the team, since this current approach is meant to build up an "insurance" by penalizing negative positions to pay out future negative positions.
 
@@ -2704,19 +2737,19 @@ I didn't say the rule applies here, but if there's something said in the code co
 
 So if the issue breaks an invariant from code comments, but it doesn't have Medium severity, then it's invalid.
 
-> This is the crux of the issue I am reporting here. That's true in the case of a single position, the issue is that funding_received of that position being set to 0 does not mitigate the underpayment of funding which it made by going negative - they are opposite tokens in the pair.
-While that positions funding_payment is capped at the collateral of the specific position, the other side of the pool will continue to accrue funding receipts from this portion of the collateral until it's liquidated:
+> This is the crux of the issue I am reporting here. That's true in the case of a single position, the issue is that funding\_received of that position being set to 0 does not mitigate the underpayment of funding which it made by going negative - they are opposite tokens in the pair.
+While that positions funding\_payment is capped at the collateral of the specific position, the other side of the pool will continue to accrue funding receipts from this portion of the collateral until it's liquidated:
 
-That still doesn't prove how `funding_recevied` can be > `funding_paid`. The function [`calc_fees`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L244) which is where this calculation of `funding_received` and `funding_paid` happens is called inside [`value`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L162) function which is called only inside [`close`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L389) and [`is_liquidatable`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L356) , which is called only inside [`liquidate`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy#L325).
+That still doesn't prove how `funding\_recevied` can be > `funding\_paid`. The function [`calc\_fees`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L244) which is where this calculation of `funding\_received` and `funding\_paid` happens is called inside [`value`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L162) function which is called only inside [`close`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L389) and [`is\_liquidatable`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L356) , which is called only inside [`liquidate`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy\#L325).
 
 Hence, this calculation of funding paid and received will be made only when closing or liquidating the position. So, the following is wrong:
 > the other side of the pool will continue to accrue funding receipts from this portion of the collateral until it's liquidated
 
-It won't accrue because the position is either already liquidated or closed. Hence, the scenario of `funding_received > funding_paid` is still not proven.
+It won't accrue because the position is either already liquidated or closed. Hence, the scenario of `funding\_received > funding\_paid` is still not proven.
 
-About the `funding_received < funding_paid`. As I understand, it's intended that the position doesn't receive any funding fees in this scenario which evident by [code comment](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy#L259).
+About the `funding\_received < funding\_paid`. As I understand, it's intended that the position doesn't receive any funding fees in this scenario which evident by [code comment](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/positions.vy\#L259).
 
-So if the position didn't manage to pay the full `funding_paid` (underpaid the fees), they're intentionally excluded from receiving any funding fees and it's not a loss of funds and these will be received by other users. 
+So if the position didn't manage to pay the full `funding\_paid` (underpaid the fees), they're intentionally excluded from receiving any funding fees and it's not a loss of funds and these will be received by other users. 
 
 Hence, my decision remains: accept the escalation and invalidate the issue. If you still see that I'm wrong somewhere, you're welcome to correct me. But, to make it easier, provide links to the appropriate LOC you refer to.
 
@@ -2726,27 +2759,27 @@ Hence, my decision remains: accept the escalation and invalidate the issue. If y
 
 > Hence, this calculation of funding paid and received will be made only when closing or liquidating the position. So, the following is wrong:
 
-That's not quite correct. Yes, `calc_fees` is only called upon closing/liquidating the position. But, this only only calculates the user's [pro-rate share of the accrued interest](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy#L265):
+That's not quite correct. Yes, `calc\_fees` is only called upon closing/liquidating the position. But, this only only calculates the user's [pro-rate share of the accrued interest](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy\#L265):
 
 ```vyper
-def calc(id: uint256, long: bool, collateral: uint256, opened_at: uint256) -> SumFees:
-    period: Period  = self.query(id, opened_at)
-    P_b   : uint256 = self.apply(collateral, period.borrowing_long) if long else (
-                      self.apply(collateral, period.borrowing_short) )
-    P_f   : uint256 = self.apply(collateral, period.funding_long) if long else (
-                      self.apply(collateral, period.funding_short) )
-    R_f   : uint256 = self.multiply(collateral, period.received_long) if long else (
-                      self.multiply(collateral, period.received_short) )
+def calc(id: uint256, long: bool, collateral: uint256, opened\_at: uint256) -> SumFees:
+    period: Period  = self.query(id, opened\_at)
+    P\_b   : uint256 = self.apply(collateral, period.borrowing\_long) if long else (
+                      self.apply(collateral, period.borrowing\_short) )
+    P\_f   : uint256 = self.apply(collateral, period.funding\_long) if long else (
+                      self.apply(collateral, period.funding\_short) )
+    R\_f   : uint256 = self.multiply(collateral, period.received\_long) if long else (
+                      self.multiply(collateral, period.received\_short) )
 
 
-    return SumFees({funding_paid: P_f, funding_received: R_f, borrowing_paid: P_b})
+    return SumFees({funding\_paid: P\_f, funding\_received: R\_f, borrowing\_paid: P\_b})
 ```
 
-The terms `period.received_long`, `period.received_short` are relevant here and these are continuously, globally updated upon any interaction by any user with the system. As a result, those positions will count towards the total collateral until explicitly closed, inflating `funding_received` beyond its true value.
+The terms `period.received\_long`, `period.received\_short` are relevant here and these are continuously, globally updated upon any interaction by any user with the system. As a result, those positions will count towards the total collateral until explicitly closed, inflating `funding\_received` beyond its true value.
 
 > and it's not a loss of funds and these will be received by other users.
 
-The point of this issue is that user's will not receive those lost funds. Since the global `funding_received` included the collateral of positions which were later excluded from receiving their fee, the eventual pro-rata distribution of fees upon closing the position will not be adjusted for this. Thus some portion of fees will remain unclaimed.
+The point of this issue is that user's will not receive those lost funds. Since the global `funding\_received` included the collateral of positions which were later excluded from receiving their fee, the eventual pro-rata distribution of fees upon closing the position will not be adjusted for this. Thus some portion of fees will remain unclaimed.
 
 The current approach is problematic with loss of funds and disrupted liquidation functionality. There are more direct ways to achieve the correct balance of funding payments to receipts.
 
@@ -2756,10 +2789,10 @@ To finally confirm, the problem here is that these funds are just locked in the 
 
 **rickkk137**
 
-as I got the main point in this report is funding_received can exceed funding_paid but this isn't correct
+as I got the main point in this report is funding\_received can exceed funding\_paid but this isn't correct
 
 
->It's possible for funding_received by one side of the pool to exceed the funding_paid by the other side, in the case that a position went negative.
+>It's possible for funding\_received by one side of the pool to exceed the funding\_paid by the other side, in the case that a position went negative.
 
 <details>
 <summary>
@@ -2768,49 +2801,49 @@ provided PoC
 
 ```vyper
 
-    def test_funding_received_cannot_exceed_than_funding_paid(core, BTC,mint_token, STX, lp_provider, LP, open, mint, short, positions, owner, pools, fees, oracle, api, long, close):
+    def test\_funding\_received\_cannot\_exceed\_than\_funding\_paid(core, BTC,mint\_token, STX, lp\_provider, LP, open, mint, short, positions, owner, pools, fees, oracle, api, long, close):
     pools.CORE()      == core
     fees.CORE()       == core
     positions.CORE()  == core
     oracle.API()      == api
     core.API()        == api
-    mint_token(BTC, btc(1000), lp_provider)
-    mint_token(BTC, btc(1000), short)
-    mint_token(STX, d(100000), long)
+    mint\_token(BTC, btc(1000), lp\_provider)
+    mint\_token(BTC, btc(1000), short)
+    mint\_token(STX, d(100000), long)
 
 
-    mint_token(STX, d(100_000), lp_provider)
-    assert BTC.balanceOf(lp_provider) == btc(1000)
+    mint\_token(STX, d(100\_000), lp\_provider)
+    assert BTC.balanceOf(lp\_provider) == btc(1000)
     assert BTC.balanceOf(short) == btc(1000)
 
-    assert STX.balanceOf(lp_provider) == d(100_000)
+    assert STX.balanceOf(lp\_provider) == d(100\_000)
 
     core.fresh("BTC-STX", BTC, STX, LP, sender=owner)
-    BTC.approve(core.address, btc(1000), sender=lp_provider)
-    STX.approve(core.address, d(100_000), sender=lp_provider)
-    mint(BTC, STX, LP, btc(100), d(100_000), price=d(50_000), sender=lp_provider)
+    BTC.approve(core.address, btc(1000), sender=lp\_provider)
+    STX.approve(core.address, d(100\_000), sender=lp\_provider)
+    mint(BTC, STX, LP, btc(100), d(100\_000), price=d(50\_000), sender=lp\_provider)
 
     BTC.approve(core.address, 10000000, sender=short)
     STX.approve(core.address, d(100000), sender=long)
-    print("stx_balance:", STX.balanceOf(long) / 1e6)
+    print("stx\_balance:", STX.balanceOf(long) / 1e6)
 
-    open(BTC, STX, True, d(50000), 1, price=d(50_000), sender=long)
-    open(BTC, STX, False, 10000, 1, price=d(50_000), sender=short)
+    open(BTC, STX, True, d(50000), 1, price=d(50\_000), sender=long)
+    open(BTC, STX, False, 10000, 1, price=d(50\_000), sender=short)
 
 
     chain.mine(20000)
 
-    position = positions.value(1, ctx(d(50_000)))#funding_fee payer
-    position2 = positions.value(2, ctx(d(50_000)))#funding_fee receiver
+    position = positions.value(1, ctx(d(50\_000)))\#funding\_fee payer
+    position2 = positions.value(2, ctx(d(50\_000)))\#funding\_fee receiver
 
-    print("position.remaining_collateral:", position.pnl.remaining / 1e6)
-    print("position.fees.funding_paid:", position.fees.funding_paid / 1e6)
+    print("position.remaining\_collateral:", position.pnl.remaining / 1e6)
+    print("position.fees.funding\_paid:", position.fees.funding\_paid / 1e6)
 
-    print("position.funding_received:", position2.fees.funding_received / 1e6)
+    print("position.funding\_received:", position2.fees.funding\_received / 1e6)
     
-    #@>>>>>position.remaining_collateral: 0.0
-    #@>>>>>position.fees.funding_paid: 50000.0
-    #@>>>>>position.funding_received: 50000.0
+    \#@>>>>>position.remaining\_collateral: 0.0
+    \#@>>>>>position.fees.funding\_paid: 50000.0
+    \#@>>>>>position.funding\_received: 50000.0
 ```    
 </details>
 
@@ -2843,57 +2876,57 @@ Yes, thats correct. That portion of the funding payments is not accessible to an
 
 **rickkk137**
 
-when a position be penalized and funding_received for that position become zero and base or quote collateral's pool will be decrease
+when a position be penalized and funding\_received for that position become zero and base or quote collateral's pool will be decrease
 ```
 @external
 def close(id: uint256, d: Deltas) -> PoolState:
 ...
-    base_collateral  : self.MATH.eval(ps.base_collateral,  d.base_collateral),
-    quote_collateral : self.MATH.eval(ps.quote_collateral, d.quote_collateral),
+    base\_collateral  : self.MATH.eval(ps.base\_collateral,  d.base\_collateral),
+    quote\_collateral : self.MATH.eval(ps.quote\_collateral, d.quote\_collateral),
 ```
-its mean other position get more funding_received compared to past because funding_recieved has reserve relation with base or qoute collateral
+its mean other position get more funding\_received compared to past because funding\_recieved has reserve relation with base or qoute collateral
 ```
-  paid_long_term      : uint256 = self.apply(fs.long_collateral, fs.funding_long * new_terms)
- @>> received_short_term : uint256 = self.divide(paid_long_term,    fs.short_collateral)
+  paid\_long\_term      : uint256 = self.apply(fs.long\_collateral, fs.funding\_long * new\_terms)
+ @>> received\_short\_term : uint256 = self.divide(paid\_long\_term,    fs.short\_collateral)
 ```
 
 
 
 **msheikhattari**
 
-The pro rata share of funding received will be correctly adjusted moving forward from liquidation. But the point is that the period.funding_received terms already included the now liquidated collateral, so the other positions do not receive adjusted distributions to account for that. 
+The pro rata share of funding received will be correctly adjusted moving forward from liquidation. But the point is that the period.funding\_received terms already included the now liquidated collateral, so the other positions do not receive adjusted distributions to account for that. 
 
 **rickkk137**
 
 ```
-def query(id: uint256, opened_at: uint256) -> Period:
+def query(id: uint256, opened\_at: uint256) -> Period:
   """
-  Return the total fees due from block `opened_at` to the current block.
+  Return the total fees due from block `opened\_at` to the current block.
   """
-  fees_i : FeeState = Fees(self).fees_at_block(opened_at, id)
-  fees_j : FeeState = Fees(self).current_fees(id)
+  fees\_i : FeeState = Fees(self).fees\_at\_block(opened\_at, id)
+  fees\_j : FeeState = Fees(self).current\_fees(id)
   return Period({
-    borrowing_long  : self.slice(fees_i.borrowing_long_sum,  fees_j.borrowing_long_sum),
-    borrowing_short : self.slice(fees_i.borrowing_short_sum, fees_j.borrowing_short_sum),
-    funding_long    : self.slice(fees_i.funding_long_sum,    fees_j.funding_long_sum),
-    funding_short   : self.slice(fees_i.funding_short_sum,   fees_j.funding_short_sum),
-   @>>> received_long   : self.slice(fees_i.received_long_sum,   fees_j.received_long_sum),
-  @>>>  received_short  : self.slice(fees_i.received_short_sum,  fees_j.received_short_sum),
+    borrowing\_long  : self.slice(fees\_i.borrowing\_long\_sum,  fees\_j.borrowing\_long\_sum),
+    borrowing\_short : self.slice(fees\_i.borrowing\_short\_sum, fees\_j.borrowing\_short\_sum),
+    funding\_long    : self.slice(fees\_i.funding\_long\_sum,    fees\_j.funding\_long\_sum),
+    funding\_short   : self.slice(fees\_i.funding\_short\_sum,   fees\_j.funding\_short\_sum),
+   @>>> received\_long   : self.slice(fees\_i.received\_long\_sum,   fees\_j.received\_long\_sum),
+  @>>>  received\_short  : self.slice(fees\_i.received\_short\_sum,  fees\_j.received\_short\_sum),
   })
 both will be updated when liquidable position will be closed
   
 
 **msheikhattari**
 
-That's not quite right. From [`current_fees`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy#L137):
+That's not quite right. From [`current\_fees`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy\#L137):
 
 ```vyper
-  paid_short_term     : uint256 = self.apply(fs.short_collateral, fs.funding_short * new_terms)
-  received_long_term  : uint256 = self.divide(paid_short_term,    fs.long_collateral)
-  received_long_sum   : uint256 = self.extend(fs.received_long_sum,  received_long_term,  1)
+  paid\_short\_term     : uint256 = self.apply(fs.short\_collateral, fs.funding\_short * new\_terms)
+  received\_long\_term  : uint256 = self.divide(paid\_short\_term,    fs.long\_collateral)
+  received\_long\_sum   : uint256 = self.extend(fs.received\_long\_sum,  received\_long\_term,  1)
 ```
 
-So as mentioned in my point above, the collateral at the time of each global fee update is used. When a user later claims his pro-rate share, he will receive his fraction of the total collateral *at the time of the fee update*. Fee updates are performed continuously after each operation, and the total collateral may no longer be representative due to liquidated positions being removed from this sum. However, they were still included in the `received_{short/long}_term`, which is added onto the globally stored `received_{short/long}_sum`
+So as mentioned in my point above, the collateral at the time of each global fee update is used. When a user later claims his pro-rate share, he will receive his fraction of the total collateral *at the time of the fee update*. Fee updates are performed continuously after each operation, and the total collateral may no longer be representative due to liquidated positions being removed from this sum. However, they were still included in the `received\_{short/long}\_term`, which is added onto the globally stored `received\_{short/long}\_sum`
 
 Thus some share of these global fees are not accessible.
 
@@ -2901,16 +2934,16 @@ Thus some share of these global fees are not accessible.
 
 As I understand it:
 The fee state is checked twice in the liquidate/close. Let's take close for example:
-1. The state is checked during the [close](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy#L290) in the positions. It doesn't update the state and calculates the funding_received and funding_paid (well, in fact, it calls `close`, then it calls `value`, which calls `calc_fees`) which gives us 0 funding_received and thus 0 added to the quote_collateral.
-2. Then `core::close` updates the Pool and then updates the [fees](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy#L294).
-3. When we update the fees, we use [`FeeState.base_collateral`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy#L186) (assuming the scenario with two shorts) when calculating the fees received by shorts for this term. But, the `FeeState.base collateral` is changed only [after calculating `received_short_term/sum`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy#L226)
+1. The state is checked during the [close](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy\#L290) in the positions. It doesn't update the state and calculates the funding\_received and funding\_paid (well, in fact, it calls `close`, then it calls `value`, which calls `calc\_fees`) which gives us 0 funding\_received and thus 0 added to the quote\_collateral.
+2. Then `core::close` updates the Pool and then updates the [fees](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/core.vy\#L294).
+3. When we update the fees, we use [`FeeState.base\_collateral`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy\#L186) (assuming the scenario with two shorts) when calculating the fees received by shorts for this term. But, the `FeeState.base collateral` is changed only [after calculating `received\_short\_term/sum`](https://github.com/sherlock-audit/2024-08-velar-artha/blob/18ef2d8dc0162aca79bd71710f08a3c18c94a36e/gl-sherlock/contracts/fees.vy\#L226)
 
-So even though the closed/liquidated position didn't receive any fees and they should go to another short, the `received_short_term` accounted as there were two shorts opened, and each received their funding fees. 
+So even though the closed/liquidated position didn't receive any fees and they should go to another short, the `received\_short\_term` accounted as there were two shorts opened, and each received their funding fees. 
 
 Hence, when the other short position gets the fees, they will add only a portion from that period, not the full fee.
 
 
-Thus, I agree it should remain valid. However, medium severity should be kept because, in reality, if this situation occurs, the collateral of that closing/liquidatable position would be quite low (lower than `funding_paid`), there would be many positions, so the individual loss would be smaller (in terms of the amount, not %), the period with incorrectly applied fees would be small (given the fact that fees are updated at each operation). Hence, the loss is very limited. Planning to reject the escalation and leave the issue as it is, it will be applied at 10 am UTC.
+Thus, I agree it should remain valid. However, medium severity should be kept because, in reality, if this situation occurs, the collateral of that closing/liquidatable position would be quite low (lower than `funding\_paid`), there would be many positions, so the individual loss would be smaller (in terms of the amount, not \%), the period with incorrectly applied fees would be small (given the fact that fees are updated at each operation). Hence, the loss is very limited. Planning to reject the escalation and leave the issue as it is, it will be applied at 10 am UTC.
 
 **WangSecurity**
 
@@ -2923,18 +2956,23 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [spacegliderrrr](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/83/#issuecomment-2344430632): rejected
+- [spacegliderrrr](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/83/\#issuecomment-2344430632): rejected
 
 **WangSecurity**
 
-#93 and #18 are duplicates of this issue; they both identify that if the negative position is closed, the funding_received for it reset to 0, but these funding fees are not received by any other user and remain stuck in the contract forever.
+\#93 and \#18 are duplicates of this issue; they both identify that if the negative position is closed, the funding\_received for it reset to 0, but these funding fees are not received by any other user and remain stuck in the contract forever.
+
+
 
 # Issue M-8: First depositor could DoS the pool 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/85 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 bughuntoor
+
 ## Summary
 First depositor could DoS the pool 
 
@@ -2965,8 +3003,6 @@ Manual Review
 
 ## Recommendation
 Add a minimum liquidity requirement.
-
-
 
 ## Discussion
 
@@ -3006,7 +3042,7 @@ While indeed this doesn't qualify the DOS requirements, this issue can still res
 
 **spacegliderrrr**
 
-Price doesn't really matter - it's just needed to deposit little enough tokens that they're worth 1 wei of quote token. So if for example the pair is WETH/ USDC, a user would need to deposit ~4e8 wei WETH (considering price of $2,500).
+Price doesn't really matter - it's just needed to deposit little enough tokens that they're worth 1 wei of quote token. So if for example the pair is WETH/ USDC, a user would need to deposit ~4e8 wei WETH (considering price of \$2,500).
 
 As for the PoC, because the code is written in Vyper and Foundry does not support it, I cannot provide a PoC.
 
@@ -3044,20 +3080,20 @@ As I've said previously, this still impacts the core protocol functionality, as 
 
 **spacegliderrrr**
 
-1. Market pair used is WETH/USDT. Current WETH price $2,500.
+1. Market pair used is WETH/USDT. Current WETH price \$2,500.
 2. User is the first depositor in the pool, depositing 4e8 WETH. Based on the lines of code below, the user is minted 1 lp token.:
 `amt0 = 4e8 * 2500e18 / 1e18 = 10000e8 = 1e12`
 `lowered = 1e12 / 1e12 = 1`
 ```vyper
 @external
 @pure
-def base_to_quote(tokens: uint256, ctx: Ctx) -> uint256:
+def base\_to\_quote(tokens: uint256, ctx: Ctx) -> uint256:
   lifted : Tokens  = self.lift(Tokens({base: tokens, quote: ctx.price}), ctx)
-  amt0   : uint256 = self.to_amount(lifted.quote, lifted.base, self.one(ctx))
+  amt0   : uint256 = self.to\_amount(lifted.quote, lifted.base, self.one(ctx))
   lowered: Tokens  = self.lower(Tokens({base: 0, quote: amt0}), ctx)
   return lowered.quote
 ```
-3. Next block comes and WETH price drops to $2,499.
+3. Next block comes and WETH price drops to \$2,499.
 4. A user now attempts to deposit. Since LP tokens minted are respective to the current pool value, contract calculates pool value, using the same formula above
 `amt0 = 4e8 * 2499e18 / 1e18 = 0.9996e12`
 `lowered = 0.9996e12 / 1e12 = 0`
@@ -3067,7 +3103,7 @@ def f(mv: uint256, pv: uint256, ts: uint256) -> uint256:
   if ts == 0: return mv
   else      : return (mv * ts) / pv
 ```
-6. Pool is DoS'd until ETH price goes above $2,500 again.
+6. Pool is DoS'd until ETH price goes above \$2,500 again.
 
 
 
@@ -3086,14 +3122,19 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [msheikhattari](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/85/#issuecomment-2345044761): rejected
+- [msheikhattari](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/85/\#issuecomment-2345044761): rejected
+
+
 
 # Issue M-9: Whale LP providers can open positions on both sides to force users into high fees. 
 
 Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/89 
 
+The protocol has acknowledged this issue.
+
 ## Found by 
 bughuntoor
+
 ## Summary
 Whale LP providers can open positions on both sides to force users into high fees.
 
@@ -3121,15 +3162,13 @@ Manual Review
 ## Recommendation
 Consider a different way to calculate fees
 
-
-
 ## Discussion
 
 **msheikhattari**
 
 Escalate 
-Invalid. Quoting a valid point from your own [comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/28#issuecomment-2344387728):
-> Issue should be low/info. Ultimately, all LPs would want is fees and this would give them the highest fees possible. Furthermore, the attack is extremely costly, as it would require user to lock up hundreds of thousands/ millions, losing a significant % of them. Any user would have an incentive to add liquidity at extremely high APY, which would allow for both new positions opens and LP withdraws.
+Invalid. Quoting a valid point from your own [comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/28\#issuecomment-2344387728):
+> Issue should be low/info. Ultimately, all LPs would want is fees and this would give them the highest fees possible. Furthermore, the attack is extremely costly, as it would require user to lock up hundreds of thousands/ millions, losing a significant \% of them. Any user would have an incentive to add liquidity at extremely high APY, which would allow for both new positions opens and LP withdraws.
 
 This attack inflates borrow fees, but the high APY will attract other LP depositors which would drive the utilization back down to normal levels, reducing the fee. Unlike the issue that you were escalating, this one has no such time sensitivity - the market would naturally tend towards rebalance within the next several days / weeks. It's not reasonable to assume that the existing positions would remain open despite high fees and other LPs would not enter the market over the coming days/weeks.
 
@@ -3143,8 +3182,8 @@ The game theory makes it unlikely that the whale would be able to extract enough
 **sherlock-admin3**
 
 > Escalate 
-> Invalid. Quoting a valid point from your own [comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/28#issuecomment-2344387728):
-> > Issue should be low/info. Ultimately, all LPs would want is fees and this would give them the highest fees possible. Furthermore, the attack is extremely costly, as it would require user to lock up hundreds of thousands/ millions, losing a significant % of them. Any user would have an incentive to add liquidity at extremely high APY, which would allow for both new positions opens and LP withdraws.
+> Invalid. Quoting a valid point from your own [comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/28\#issuecomment-2344387728):
+> > Issue should be low/info. Ultimately, all LPs would want is fees and this would give them the highest fees possible. Furthermore, the attack is extremely costly, as it would require user to lock up hundreds of thousands/ millions, losing a significant \% of them. Any user would have an incentive to add liquidity at extremely high APY, which would allow for both new positions opens and LP withdraws.
 > 
 > This attack inflates borrow fees, but the high APY will attract other LP depositors which would drive the utilization back down to normal levels, reducing the fee. Unlike the issue that you were escalating, this one has no such time sensitivity - the market would naturally tend towards rebalance within the next several days / weeks. It's not reasonable to assume that the existing positions would remain open despite high fees and other LPs would not enter the market over the coming days/weeks.
 > 
@@ -3167,7 +3206,7 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 **spacegliderrrr**
 
-@WangSecurity Issue above showcases a real issue which could occur if a whale decides to _attack_ a pool. 
+@WangSecurity Issue above showcases a real issue which could occur if a whale decides to \_attack\_ a pool. 
 
 > Each opened long AND short position must pay a fixed fee, so the whale is taking a risk. He is betting that the current positions will not close, and his stake will not get diluted, just long enough to eke out a net profit.
 
@@ -3194,7 +3233,9 @@ Unique
 Escalations have been resolved successfully!
 
 Escalation status:
-- [msheikhattari](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/89/#issuecomment-2345018904): rejected
+- [msheikhattari](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/89/\#issuecomment-2345018904): rejected
+
+
 
 # Issue M-10: User could have impossible to close position if funding fees grow too big. 
 
@@ -3202,6 +3243,7 @@ Source: https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96
 
 ## Found by 
 bughuntoor
+
 ## Summary
 User could have impossible to close position if funding fees grow too big.
 
@@ -3239,8 +3281,6 @@ Manual Review
 
 ## Recommendation
 Fix is non-trivial.
-
-
 
 ## Discussion
 
@@ -3288,24 +3328,24 @@ You may delete or edit your escalation comment anytime before the 48-hour escala
 
 This is invalid.
 
-> 4. The original long is closed. This does not have an impact on the total quote collateral, as it is increased by the funding_paid which in our case will be counted as exactly as much as the collateral (as in these calculations it cannot surpass it). And it then subtracts that same quote collateral.
+> 4. The original long is closed. This does not have an impact on the total quote collateral, as it is increased by the funding\_paid which in our case will be counted as exactly as much as the collateral (as in these calculations it cannot surpass it). And it then subtracts that same quote collateral.
 
 When original long is closed, total quote collateral is changed.
 ```rust
 File: gl-sherlock\contracts\positions.vy
-209:     quote_reserves  : [self.MATH.PLUS(pos.collateral), #does not need min()
-210:                        self.MATH.MINUS(fees.funding_paid)],
-211:     quote_collateral: [self.MATH.PLUS(fees.funding_paid),
+209:     quote\_reserves  : [self.MATH.PLUS(pos.collateral), \#does not need min()
+210:                        self.MATH.MINUS(fees.funding\_paid)],
+211:     quote\_collateral: [self.MATH.PLUS(fees.funding\_paid),
 212:                        self.MATH.MINUS(pos.collateral)],
 ```
-Heres, `pos.collateral = X, fees.funding_paid = X + Y`.
+Heres, `pos.collateral = X, fees.funding\_paid = X + Y`.
 Then, 
-`quote_collateral <- quote_collateral + X + Y - X = quote_collateral + Y = 2X + Y`, and
-`quote_reserves <- quote_reserves  + X - X - Y = quote_reserves - Y`.
+`quote\_collateral <- quote\_collateral + X + Y - X = quote\_collateral + Y = 2X + Y`, and
+`quote\_reserves <- quote\_reserves  + X - X - Y = quote\_reserves - Y`.
 
 When original short is closed in step5, new total quote collateral is `2X + Y - (X + Y) = X` and there is no underflow in step6.
 As a result, the scenario of the report is wrong.
-The loss causes in `quote_reserves`, but, in practice, Y is enough small by the frequent liquidation and it should be assumed that the liquidation is done correctly.
+The loss causes in `quote\_reserves`, but, in practice, Y is enough small by the frequent liquidation and it should be assumed that the liquidation is done correctly.
 Especially, because the report does not mention about this vulnerability, I think this is invalid
 
 **ami0x226**
@@ -3316,41 +3356,41 @@ File: gl-sherlock\contracts\math.vy
 167: def apply(x: uint256, numerator: uint256) -> Fee:
 172:   fee      : uint256 = (x * numerator) / DENOM
 173:   remaining: uint256 = x - fee if fee <= x else 0
-174:   fee_     : uint256 = fee     if fee <= x else x
-175:   return Fee({x: x, fee: fee_, remaining: remaining})
+174:   fee\_     : uint256 = fee     if fee <= x else x
+175:   return Fee({x: x, fee: fee\_, remaining: remaining})
 ```
 
 ```vyper
 File: gl-sherlock\contracts\fees.vy
-265: def calc(id: uint256, long: bool, collateral: uint256, opened_at: uint256) -> SumFees:
-269:     P_f   : uint256 = self.apply(collateral, period.funding_long) if long else (
-270:                       self.apply(collateral, period.funding_short) )
-274:     return SumFees({funding_paid: P_f, funding_received: R_f, borrowing_paid: P_b})
+265: def calc(id: uint256, long: bool, collateral: uint256, opened\_at: uint256) -> SumFees:
+269:     P\_f   : uint256 = self.apply(collateral, period.funding\_long) if long else (
+270:                       self.apply(collateral, period.funding\_short) )
+274:     return SumFees({funding\_paid: P\_f, funding\_received: R\_f, borrowing\_paid: P\_b})
 ```
 
 **spacegliderrrr**
 
-> Heres, pos.collateral = X, fees.funding_paid = X + Y.
+> Heres, pos.collateral = X, fees.funding\_paid = X + Y.
 
-Here's where you're wrong. When the user closes their position, `funding_paid` cannot exceed `pos.collateral`. So `fees.funding_paid == pos.collateral` when closing the original long. Please re-read the issue and code again.
+Here's where you're wrong. When the user closes their position, `funding\_paid` cannot exceed `pos.collateral`. So `fees.funding\_paid == pos.collateral` when closing the original long. Please re-read the issue and code again.
 
 **ami0x226**
 
-> > Heres, pos.collateral = X, fees.funding_paid = X + Y.
+> > Heres, pos.collateral = X, fees.funding\_paid = X + Y.
 > 
-> Here's where you're wrong. When the user closes their position, `funding_paid` cannot exceed `pos.collateral`. So `fees.funding_paid == pos.collateral` when closing the original long. Please re-read the issue and code again.
+> Here's where you're wrong. When the user closes their position, `funding\_paid` cannot exceed `pos.collateral`. So `fees.funding\_paid == pos.collateral` when closing the original long. Please re-read the issue and code again.
 
-That's true. I mentioned about it in the [above comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96#issuecomment-2345445382)
+That's true. I mentioned about it in the [above comment](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96\#issuecomment-2345445382)
 > Also, Funding paid cannot exceed collateral of a position from the apply function.
 
-I just use `fees.funding_paid = X + Y` to follow the step2 of `bughuntoor`'s scenario:
+I just use `fees.funding\_paid = X + Y` to follow the step2 of `bughuntoor`'s scenario:
 > 2. Eventually the funding fee grows larger than the whole long position (X + Y). it is due liquidation, but due to bot failure is not yet liquidated (which based on comments is expected and possible behaviour)
 
 
 **rickkk137**
 
 invalid
-funding_paid cannot exceed than collateral also funding_received cannot be greater funding_paid
+funding\_paid cannot exceed than collateral also funding\_received cannot be greater funding\_paid
 
 **WangSecurity**
 
@@ -3368,112 +3408,112 @@ from ape import chain
 import pytest
 from conftest import d, ctx
 
-# https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96
+\# https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96
 
-# 1) There's an open long (for total collateral of X) and an open short position. Long position pays funding fee to the short position.
-# 2) Eventually the funding fee grows larger than the whole long position (X + Y). it is due liquidation, but due to bot failure is not yet liquidated (which based on comments is expected and possible behaviour)
-# 3) A new user opens a new long position, once with X collateral. (total quote collateral is currently 2X)
-# 4) The original long is closed. This does not have an impact on the total quote collateral, as it is increased by the funding_paid which in our case will be counted as exactly as much as the collateral (as in these calculations it cannot surpass it). And it then subtracts that same quote collateral.
-# 5) The original short is closed. funding_received is calculated as X + Y and therefore that's the amount the total quote collateral is reduced by. The new total quote collateral is 2X - (X + Y) = X - Y.
-# 6) Later when the user attempts to close their position it will fail as it will attempt subtracting (X - Y) - X which will underflow.
+\# 1) There's an open long (for total collateral of X) and an open short position. Long position pays funding fee to the short position.
+\# 2) Eventually the funding fee grows larger than the whole long position (X + Y). it is due liquidation, but due to bot failure is not yet liquidated (which based on comments is expected and possible behaviour)
+\# 3) A new user opens a new long position, once with X collateral. (total quote collateral is currently 2X)
+\# 4) The original long is closed. This does not have an impact on the total quote collateral, as it is increased by the funding\_paid which in our case will be counted as exactly as much as the collateral (as in these calculations it cannot surpass it). And it then subtracts that same quote collateral.
+\# 5) The original short is closed. funding\_received is calculated as X + Y and therefore that's the amount the total quote collateral is reduced by. The new total quote collateral is 2X - (X + Y) = X - Y.
+\# 6) Later when the user attempts to close their position it will fail as it will attempt subtracting (X - Y) - X which will underflow.
 
-# OR
-# 1. Consider the original long and short positions, long pays funding fee to short.
-# 2. Time goes by, liquidator bots fails and funding fee makes 100% of the long collateral (consider collateral is X)
-# 3. Another long position is opened again with collateral X.
-# 4. Time goes by, equivalent to funding fee of 10%. Total collateral at this moment is still 2X, so the new total funding paid is 1.2X
-# 5. Short position closes and receives funding paid of 1.2X. Quote collateral is now reduced from 2X to 0.8X.
-# 6. (Optional) Original long closes position. For them funding paid is capped at their collateral, so funding paid == collateral, so closing does not make a difference on the quote collateral.
-# 7. The next long position holder tries to close. They're unable because their collateral is 1x, funding paid is 0.1x. Collateral calculation is 0.8X + 0.1X - 1X and underflow reverts
+\# OR
+\# 1. Consider the original long and short positions, long pays funding fee to short.
+\# 2. Time goes by, liquidator bots fails and funding fee makes 100\% of the long collateral (consider collateral is X)
+\# 3. Another long position is opened again with collateral X.
+\# 4. Time goes by, equivalent to funding fee of 10\%. Total collateral at this moment is still 2X, so the new total funding paid is 1.2X
+\# 5. Short position closes and receives funding paid of 1.2X. Quote collateral is now reduced from 2X to 0.8X.
+\# 6. (Optional) Original long closes position. For them funding paid is capped at their collateral, so funding paid == collateral, so closing does not make a difference on the quote collateral.
+\# 7. The next long position holder tries to close. They're unable because their collateral is 1x, funding paid is 0.1x. Collateral calculation is 0.8X + 0.1X - 1X and underflow reverts
 
 PARAMS = {
-  'MIN_FEE'               : 1_00000000,
-  'MAX_FEE'               : 1_00000000, # 10%/block
-  'PROTOCOL_FEE'          : 1000,
-  'LIQUIDATION_FEE'       : 2,
-  'MIN_LONG_COLLATERAL'   : 1,
-  'MAX_LONG_COLLATERAL'   : 1_000_000_000,
-  'MIN_SHORT_COLLATERAL'  : 1,
-  'MAX_SHORT_COLLATERAL'  : 1_000_000_000,
-  'MIN_LONG_LEVERAGE'     : 1,
-  'MAX_LONG_LEVERAGE'     : 10,
-  'MIN_SHORT_LEVERAGE'    : 1,
-  'MAX_SHORT_LEVERAGE'    : 10,
-  'LIQUIDATION_THRESHOLD' : 1,
+  'MIN\_FEE'               : 1\_00000000,
+  'MAX\_FEE'               : 1\_00000000, \# 10\%/block
+  'PROTOCOL\_FEE'          : 1000,
+  'LIQUIDATION\_FEE'       : 2,
+  'MIN\_LONG\_COLLATERAL'   : 1,
+  'MAX\_LONG\_COLLATERAL'   : 1\_000\_000\_000,
+  'MIN\_SHORT\_COLLATERAL'  : 1,
+  'MAX\_SHORT\_COLLATERAL'  : 1\_000\_000\_000,
+  'MIN\_LONG\_LEVERAGE'     : 1,
+  'MAX\_LONG\_LEVERAGE'     : 10,
+  'MIN\_SHORT\_LEVERAGE'    : 1,
+  'MAX\_SHORT\_LEVERAGE'    : 10,
+  'LIQUIDATION\_THRESHOLD' : 1,
 }
 
-PRICE = 400_000
+PRICE = 400\_000
 
-def test_issue(core, api, pools, positions, fees, math, oracle, params,
+def test\_issue(core, api, pools, positions, fees, math, oracle, params,
             VEL, STX, LP,
             mint, burn, open, close,
-            long, short, lp_provider, long2, owner,
-            mint_token):
+            long, short, lp\_provider, long2, owner,
+            mint\_token):
 
-    # setup
+    \# setup
     core.fresh("VEL-STX", VEL, STX, LP, sender=owner)
-    mint_token(VEL, d(100_000), lp_provider)
-    mint_token(STX, d(100_000), lp_provider)
-    mint_token(VEL, d(10_000) , long)
-    mint_token(STX, d(10_000) , long)
-    mint_token(VEL, d(10_000) , long2)
-    mint_token(STX, d(10_000) , long2)
-    mint_token(VEL, d(10_000) , short)
-    mint_token(STX, d(10_000) , short)
-    VEL.approve(core.address, d(100_000), sender=lp_provider)
-    STX.approve(core.address, d(100_000), sender=lp_provider)
-    VEL.approve(core.address, d(10_000) , sender=long)
-    STX.approve(core.address, d(10_000) , sender=long)
-    VEL.approve(core.address, d(10_000) , sender=long2)
-    STX.approve(core.address, d(10_000) , sender=long2)
-    VEL.approve(core.address, d(10_000) , sender=short)
-    STX.approve(core.address, d(10_000) , sender=short)
-    mint(VEL, STX, LP, d(10_000), d(4_000), price=PRICE, sender=lp_provider)
-    params.set_params(PARAMS, sender=owner)         # set 10 % fee / block
+    mint\_token(VEL, d(100\_000), lp\_provider)
+    mint\_token(STX, d(100\_000), lp\_provider)
+    mint\_token(VEL, d(10\_000) , long)
+    mint\_token(STX, d(10\_000) , long)
+    mint\_token(VEL, d(10\_000) , long2)
+    mint\_token(STX, d(10\_000) , long2)
+    mint\_token(VEL, d(10\_000) , short)
+    mint\_token(STX, d(10\_000) , short)
+    VEL.approve(core.address, d(100\_000), sender=lp\_provider)
+    STX.approve(core.address, d(100\_000), sender=lp\_provider)
+    VEL.approve(core.address, d(10\_000) , sender=long)
+    STX.approve(core.address, d(10\_000) , sender=long)
+    VEL.approve(core.address, d(10\_000) , sender=long2)
+    STX.approve(core.address, d(10\_000) , sender=long2)
+    VEL.approve(core.address, d(10\_000) , sender=short)
+    STX.approve(core.address, d(10\_000) , sender=short)
+    mint(VEL, STX, LP, d(10\_000), d(4\_000), price=PRICE, sender=lp\_provider)
+    params.set\_params(PARAMS, sender=owner)         \# set 10 \% fee / block
 
-    START_BLOCK = chain.blocks[-1].number
-    print(f"Start block: {START_BLOCK}")
+    START\_BLOCK = chain.blocks[-1].number
+    print(f"Start block: {START\_BLOCK}")
 
-    # 1) There's an open long (for total collateral of X) and an open short position. Long position pays funding fee to the short position.
-    # open pays funding when long utilization > short utilization (interest/reserves)
+    \# 1) There's an open long (for total collateral of X) and an open short position. Long position pays funding fee to the short position.
+    \# open pays funding when long utilization > short utilization (interest/reserves)
     X  = d(100)
     p1 = open(VEL, STX, True  , X   , 10, price=PRICE, sender=long)
     p2 = open(VEL, STX, False , d(5),  2, price=PRICE, sender=short)
     assert not p1.failed, "open long"
     assert not p2.failed, "open short"
 
-    fees = params.dynamic_fees(pools.lookup(1))
+    fees = params.dynamic\_fees(pools.lookup(1))
     print(f"Pool fees: {fees}")
 
-    # 2. Time goes by, liquidator bots fails and funding fee makes 100% of
-    # the long collateral (consider collateral is X)
+    \# 2. Time goes by, liquidator bots fails and funding fee makes 100\% of
+    \# the long collateral (consider collateral is X)
     chain.mine(10)
 
-    # fees/value after
+    \# fees/value after
     value = positions.value(1, ctx(PRICE))
     print(value['fees'])
     print(value['pnl'])
-    assert value['fees']['funding_paid']         == 99900000
-    assert value['fees']['funding_paid_want']    == 99900000
-    assert value['fees']['borrowing_paid']       == 0
-    # assert value['fees']['borrowing_paid_want']  == 99900000
+    assert value['fees']['funding\_paid']         == 99900000
+    assert value['fees']['funding\_paid\_want']    == 99900000
+    assert value['fees']['borrowing\_paid']       == 0
+    \# assert value['fees']['borrowing\_paid\_want']  == 99900000
     assert value['pnl']['remaining']             == 0
 
     value = positions.value(2, ctx(PRICE))
     print(value['fees'])
     print(value['pnl'])
-    assert value['fees']['funding_paid']            == 0
-    assert value['fees']['funding_received']        == 99900000
-    assert value['fees']['funding_received_want']   == 99900000
-    # assert value['fees']['borrowing_paid']          == 4995000
+    assert value['fees']['funding\_paid']            == 0
+    assert value['fees']['funding\_received']        == 99900000
+    assert value['fees']['funding\_received\_want']   == 99900000
+    \# assert value['fees']['borrowing\_paid']          == 4995000
     assert value['pnl']['remaining']                == 4995000
 
-    # 3. Another long position is opened again with collateral X.
+    \# 3. Another long position is opened again with collateral X.
     p3 = open(VEL, STX, True, X, 10, price=PRICE, sender=long2)
     assert not p3.failed
 
-    # 4. Time goes by, equivalent to funding fee of 10%.
-    # Total collateral at this moment is still 2X, so the new total funding paid is 1.2X
+    \# 4. Time goes by, equivalent to funding fee of 10\%.
+    \# Total collateral at this moment is still 2X, so the new total funding paid is 1.2X
     chain.mine(1)
 
     print(f"Pool: {pools.lookup(1)}")
@@ -3486,40 +3526,40 @@ def test_issue(core, api, pools, positions, fees, math, oracle, params,
     print(f"Long 2: {value['fees']}")
     print(f"Long 2: {value['pnl']}")
 
-    assert value['fees']['funding_paid'] == 9990000     #TODO: value with mine(2) is high?
+    assert value['fees']['funding\_paid'] == 9990000     \#TODO: value with mine(2) is high?
     assert value['pnl']['remaining']     == 89910000
 
-    print(f"Blocks: {chain.blocks[-1].number - START_BLOCK}")
+    print(f"Blocks: {chain.blocks[-1].number - START\_BLOCK}")
 
-    # 5. Short position closes and receives funding paid of 1.2X. Quote collateral is now reduced from 2X to 0.8X.
+    \# 5. Short position closes and receives funding paid of 1.2X. Quote collateral is now reduced from 2X to 0.8X.
     tx = close(VEL, STX, 2, price=PRICE, sender=short)
-    print(core.Close.from_receipt(tx)[0]['value'])
-    # fees: [0, 0, 139860000, 139860000, 0, 0, 4995000]
+    print(core.Close.from\_receipt(tx)[0]['value'])
+    \# fees: [0, 0, 139860000, 139860000, 0, 0, 4995000]
     assert not tx.failed
 
-    print(f"Blocks: {chain.blocks[-1].number - START_BLOCK}")
+    print(f"Blocks: {chain.blocks[-1].number - START\_BLOCK}")
 
     pool = pools.lookup(1)
     print(f"Pool: {pool}")
-    # assert pool['quote_collateral'] == 9990000 * 0.8  #59940000
+    \# assert pool['quote\_collateral'] == 9990000 * 0.8  \#59940000
     value = positions.value(3, ctx(PRICE))
     print(f"Long 2: {value['fees']}")
     print(f"Long 2: {value['pnl']}")
     print(f"Long 2: {value['deltas']}")
 
-    # 7. The next long position holder tries to close. They're unable because their collateral is 1x, funding paid is 0.1x.
-    # Collateral calculation is 0.8X + 0.1X - 1X and underflow reverts
+    \# 7. The next long position holder tries to close. They're unable because their collateral is 1x, funding paid is 0.1x.
+    \# Collateral calculation is 0.8X + 0.1X - 1X and underflow reverts
     tx = close(VEL, STX, 3, price=PRICE, sender=long2)
-    print(core.Close.from_receipt(tx)[0]['value'])
+    print(core.Close.from\_receipt(tx)[0]['value'])
     assert not tx.failed, "close 2nd long"
 
-    # 6. (Optional) Original long closes position. For them funding paid is capped at their collateral,
-    # so funding paid == collateral, so closing does not make a difference on the quote collateral.
+    \# 6. (Optional) Original long closes position. For them funding paid is capped at their collateral,
+    \# so funding paid == collateral, so closing does not make a difference on the quote collateral.
     tx = close(VEL, STX, 1, price=PRICE, sender=long)
-    print(core.Close.from_receipt(tx)[0]['value'])
+    print(core.Close.from\_receipt(tx)[0]['value'])
     assert not tx.failed, "close original"
 
-    print(f"Blocks: {chain.blocks[-1].number - START_BLOCK}")
+    print(f"Blocks: {chain.blocks[-1].number - START\_BLOCK}")
 
     pool = pools.lookup(1)
     print(f"Pool: {pool}")
@@ -3561,6 +3601,14 @@ Has duplicates
 Escalations have been resolved successfully!
 
 Escalation status:
-- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96/#issuecomment-2344287615): rejected
-- [spacegliderrrr](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96/#issuecomment-2344359663): rejected
+- [KupiaSecAdmin](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96/\#issuecomment-2344287615): rejected
+- [spacegliderrrr](https://github.com/sherlock-audit/2024-08-velar-artha-judging/issues/96/\#issuecomment-2344359663): rejected
+
+**sherlock-admin2**
+
+The protocol team fixed this issue in the following PRs/commits:
+https://github.com/Velar-co/gl-sherlock/pull/2
+
+
+
 
